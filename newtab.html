@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Countdown</title>
+    <link rel="stylesheet" href="newtab.css">
+</head>
+<body>
+    <div class="container">
+        <div class="content">
+            <h1 class="title">Work Countdown</h1>
+            
+            <div class="time-display">
+                <div class="current-time">
+                    <span class="label">Current Time</span>
+                    <span id="currentTime" class="time">--:--</span>
+                </div>
+                
+                <div class="work-hours">
+                    <span class="label">Work Hours</span>
+                    <span id="workHours" class="work-schedule">--:-- to --:--</span>
+                </div>
+                
+                <div class="countdown">
+                    <span class="label">Time Until Freedom</span>
+                    <span id="countdown" class="time countdown-time">--:--:--</span>
+                </div>
+            </div>
+            
+            <div class="motivation">
+                <p id="motivationMessage" class="message">Loading...</p>
+            </div>
+            
+            <div class="settings-link">
+                <a href="options.html" target="_blank">⚙️ Settings</a>
+            </div>
+        </div>
+    </div>
+    
+    <script src="newtab.js"></script>
+</body>
+</html>

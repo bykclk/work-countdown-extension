@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Countdown Settings</title>
+    <link rel="stylesheet" href="options.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚙️ Work Countdown Settings</h1>
+            <p>Configure when your workday ends</p>
+        </div>
+        
+        <div class="settings-form">
+            <div class="form-group">
+                <label for="startTime">Start of Work Time:</label>
+                <input type="time" id="startTime" value="09:00">
+                <small>Set the time when your workday starts (24-hour format)</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="endTime">End of Work Time:</label>
+                <input type="time" id="endTime" value="17:30">
+                <small>Set the time when your workday ends (24-hour format)</small>
+            </div>
+            
+            <div class="form-group">
+                <label>Working Days:</label>
+                <div class="weekday-selector">
+                    <label class="weekday-checkbox">
+                        <input type="checkbox" value="1" checked> Monday
+                    </label>
+                    <label class="weekday-checkbox">
+                        <input type="checkbox" value="2" checked> Tuesday
+                    </label>
+                    <label class="weekday-checkbox">
+                        <input type="checkbox" value="3" checked> Wednesday
+                    </label>
+                    <label class="weekday-checkbox">
+                        <input type="checkbox" value="4" checked> Thursday
+                    </label>
+                    <label class="weekday-checkbox">
+                        <input type="checkbox" value="5" checked> Friday
+                    </label>
+                    <label class="weekday-checkbox">
+                        <input type="checkbox" value="6"> Saturday
+                    </label>
+                    <label class="weekday-checkbox">
+                        <input type="checkbox" value="0"> Sunday
+                    </label>
+                </div>
+                <small>Select which days of the week you work</small>
+            </div>
+            
+            <div class="form-actions">
+                <button id="saveBtn" type="button">Save Settings</button>
+                <button id="resetBtn" type="button" class="secondary">Reset to Default</button>
+            </div>
+            
+            <div id="status" class="status"></div>
+        </div>
+        
+        <div class="preview">
+            <h3>Preview</h3>
+            <div class="preview-content">
+                <div class="preview-time">
+                    <span class="label">Current Time</span>
+                    <span id="previewCurrentTime" class="time">--:--</span>
+                </div>
+                <div class="preview-work-hours">
+                    <span class="label">Work Hours</span>
+                    <span id="previewWorkHours" class="work-schedule">--:-- to --:--</span>
+                </div>
+                <div class="preview-countdown">
+                    <span class="label" id="previewCountdownLabel">Time Until Freedom</span>
+                    <span id="previewCountdown" class="time">--:--:--</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Changes are saved automatically and will apply to all new tabs.</p>
+        </div>
+    </div>
+    
+    <script src="options.js"></script>
+</body>
+</html>

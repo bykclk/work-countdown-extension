@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Work Countdown",
+  "version": "1.0",
+  "description": "See how much time is left until you can go home on every new tab",
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "options_page": "options.html",
+  "permissions": [
+    "storage"
+  ]
+}
