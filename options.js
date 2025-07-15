@@ -1,84 +1,3 @@
-// Default times and working days
-const DEFAULT_START_TIME = "09:00";
-const DEFAULT_END_TIME = "17:30";
-const DEFAULT_WORKING_DAYS = [1, 2, 3, 4, 5]; // Monday to Friday
-
-// Format time as HH:MM
-function formatTime(date) {
-    return date.toLocaleTimeString('en-US', { 
-        hour12: false, 
-        hour: '2-digit', 
-        minute: '2-digit' 
-    });
-}
-
-// Calculate time difference for preview
-function calculateTimeDifference(startTime, endTime, workingDays) {
-    const now = new Date();
-    const [startHours, startMinutes] = startTime.split(':').map(Number);
-    const [endHours, endMinutes] = endTime.split(':').map(Number);
-    
-    const currentDay = now.getDay(); // 0=Sunday, 1=Monday, etc.
-    
-    // Check if today is a working day
-    const isWorkingDay = workingDays.includes(currentDay);
-    
-    if (isWorkingDay) {
-        const startDateTime = new Date();
-        startDateTime.setHours(startHours, startMinutes, 0, 0);
-        
-        const endDateTime = new Date();
-        endDateTime.setHours(endHours, endMinutes, 0, 0);
-        
-        // If end time is earlier than start time, assume end time is next day
-        if (endDateTime <= startDateTime) {
-            endDateTime.setDate(endDateTime.getDate() + 1);
-        }
-        
-        // Check if we're before work hours
-        if (now < startDateTime) {
-            const diffMs = startDateTime - now;
-            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-            const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-            const diffSeconds = Math.floor((diffMs % (1000 * 60)) / 1000);
-            
-            return {
-                display: `${diffHours.toString().padStart(2, '0')}:${diffMinutes.toString().padStart(2, '0')}:${diffSeconds.toString().padStart(2, '0')}`,
-                message: "Time until work starts"
-            };
-        }
-        
-        // If we're during work hours
-        if (now >= startDateTime && now < endDateTime) {
-            const diffMs = endDateTime - now;
-            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-            const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-            const diffSeconds = Math.floor((diffMs % (1000 * 60)) / 1000);
-            
-            return {
-                display: `${diffHours.toString().padStart(2, '0')}:${diffMinutes.toString().padStart(2, '0')}:${diffSeconds.toString().padStart(2, '0')}`,
-                message: "Time Until Freedom"
-            };
-        }
-    }
-    
-    // Find next working day
-    const nextWorkingDay = findNextWorkingDay(workingDays);
-    const nextStartDateTime = new Date();
-    nextStartDateTime.setDate(nextStartDateTime.getDate() + nextWorkingDay.daysToAdd);
-    nextStartDateTime.setHours(startHours, startMinutes, 0, 0);
-    
-    const diffMs = nextStartDateTime - now;
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-    const diffSeconds = Math.floor((diffMs % (1000 * 60)) / 1000);
-    
-    return {
-        display: `${diffHours.toString().padStart(2, '0')}:${diffMinutes.toString().padStart(2, '0')}:${diffSeconds.toString().padStart(2, '0')}`,
-        message: `Time until ${nextWorkingDay.dayName}`
-    };
-}
-
 // Get selected working days
 function getSelectedWorkingDays() {
     const checkboxes = document.querySelectorAll('.weekday-checkbox input[type="checkbox"]:checked');
@@ -87,12 +6,17 @@ function getSelectedWorkingDays() {
 
 // Update preview
 function updatePreview() {
-    const startTimeInput = document.getElementById('startTime');
-    const endTimeInput = document.getElementById('endTime');
-    const previewCurrentTime = document.getElementById('previewCurrentTime');
-    const previewWorkHours = document.getElementById('previewWorkHours');
-    const previewCountdown = document.getElementById('previewCountdown');
-    const previewCountdownLabel = document.getElementById('previewCountdownLabel');
+    const startTimeInput = safeGetElement('startTime');
+    const endTimeInput = safeGetElement('endTime');
+    const previewCurrentTime = safeGetElement('previewCurrentTime');
+    const previewWorkHours = safeGetElement('previewWorkHours');
+    const previewCountdown = safeGetElement('previewCountdown');
+    const previewCountdownLabel = safeGetElement('previewCountdownLabel');
+    
+    if (!startTimeInput || !endTimeInput || !previewCurrentTime || !previewWorkHours || !previewCountdown || !previewCountdownLabel) {
+        console.error('Required DOM elements not found in preview');
+        return;
+    }
     
     // Update current time
     const now = new Date();
@@ -112,9 +36,15 @@ function updatePreview() {
 
 // Show status message
 function showStatus(message, isError = false) {
-    const statusDiv = document.getElementById('status');
+    const statusDiv = safeGetElement('status');
+    if (!statusDiv) {
+        console.error('Status element not found');
+        return;
+    }
+    
     statusDiv.textContent = message;
     statusDiv.className = `status ${isError ? 'error' : 'success'}`;
+    statusDiv.style.opacity = '1';
     
     // Hide after 3 seconds
     setTimeout(() => {
@@ -124,35 +54,31 @@ function showStatus(message, isError = false) {
 
 // Save settings
 function saveSettings() {
-    const startTimeInput = document.getElementById('startTime');
-    const endTimeInput = document.getElementById('endTime');
+    const startTimeInput = safeGetElement('startTime');
+    const endTimeInput = safeGetElement('endTime');
+    
+    if (!startTimeInput || !endTimeInput) {
+        showStatus('Error: Required input fields not found.', true);
+        return;
+    }
+    
     const startTime = startTimeInput.value;
     const endTime = endTimeInput.value;
     const workingDays = getSelectedWorkingDays();
     
-    if (!startTime || !endTime) {
-        showStatus('Please select valid start and end times.', true);
+    // Validate inputs
+    if (!isValidTimeFormat(startTime) || !isValidTimeFormat(endTime)) {
+        showStatus('Please enter valid times in HH:MM format.', true);
         return;
     }
     
-    if (workingDays.length === 0) {
+    if (!isValidWorkingDays(workingDays)) {
         showStatus('Please select at least one working day.', true);
         return;
     }
     
-    // Validate that end time is after start time (allowing for next day)
-    const [startHours, startMinutes] = startTime.split(':').map(Number);
-    const [endHours, endMinutes] = endTime.split(':').map(Number);
-    
-    const startMinutesTotal = startHours * 60 + startMinutes;
-    const endMinutesTotal = endHours * 60 + endMinutes;
-    
-    if (endMinutesTotal <= startMinutesTotal && endMinutesTotal > 0) {
-        // This is OK - work spans midnight (night shift)
-    } else if (endMinutesTotal <= startMinutesTotal) {
-        showStatus('End time should be after start time.', true);
-        return;
-    }
+    // Note: We allow night shifts where end time is before start time
+    // This is a valid use case and should not be restricted
     
     // Save to Chrome storage
     chrome.storage.local.set({
@@ -170,8 +96,14 @@ function saveSettings() {
 
 // Reset to default
 function resetSettings() {
-    const startTimeInput = document.getElementById('startTime');
-    const endTimeInput = document.getElementById('endTime');
+    const startTimeInput = safeGetElement('startTime');
+    const endTimeInput = safeGetElement('endTime');
+    
+    if (!startTimeInput || !endTimeInput) {
+        showStatus('Error: Required input fields not found.', true);
+        return;
+    }
+    
     startTimeInput.value = DEFAULT_START_TIME;
     endTimeInput.value = DEFAULT_END_TIME;
     
@@ -198,10 +130,18 @@ function resetSettings() {
 // Load saved settings
 function loadSettings() {
     chrome.storage.local.get(['startTime', 'endTime', 'workingDays'], function(result) {
-        const startTimeInput = document.getElementById('startTime');
-        const endTimeInput = document.getElementById('endTime');
-        startTimeInput.value = result.startTime || DEFAULT_START_TIME;
-        endTimeInput.value = result.endTime || DEFAULT_END_TIME;
+        if (chrome.runtime.lastError) {
+            console.error('Error loading settings:', chrome.runtime.lastError);
+            return;
+        }
+        
+        const startTimeInput = safeGetElement('startTime');
+        const endTimeInput = safeGetElement('endTime');
+        
+        if (startTimeInput && endTimeInput) {
+            startTimeInput.value = result.startTime || DEFAULT_START_TIME;
+            endTimeInput.value = result.endTime || DEFAULT_END_TIME;
+        }
         
         // Load working days
         const workingDays = result.workingDays || DEFAULT_WORKING_DAYS;
@@ -252,36 +192,59 @@ function findNextWorkingDay(workingDays) {
     };
 }
 
+// Global variable to store interval ID for cleanup
+let previewUpdateInterval = null;
+
 // Initialize the options page
 function init() {
     // Load saved settings
     loadSettings();
     
-    // Set up event listeners
-    const saveBtn = document.getElementById('saveBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const startTimeInput = document.getElementById('startTime');
-    const endTimeInput = document.getElementById('endTime');
+    // Set up event listeners with error handling
+    const saveBtn = safeGetElement('saveBtn');
+    const resetBtn = safeGetElement('resetBtn');
+    const startTimeInput = safeGetElement('startTime');
+    const endTimeInput = safeGetElement('endTime');
     const workingDayCheckboxes = document.querySelectorAll('.weekday-checkbox input[type="checkbox"]');
     
-    saveBtn.addEventListener('click', saveSettings);
-    resetBtn.addEventListener('click', resetSettings);
-    startTimeInput.addEventListener('change', updatePreview);
-    startTimeInput.addEventListener('input', updatePreview);
-    endTimeInput.addEventListener('change', updatePreview);
-    endTimeInput.addEventListener('input', updatePreview);
+    if (saveBtn) saveBtn.addEventListener('click', saveSettings);
+    if (resetBtn) resetBtn.addEventListener('click', resetSettings);
+    if (startTimeInput) {
+        startTimeInput.addEventListener('change', updatePreview);
+        startTimeInput.addEventListener('input', updatePreview);
+    }
+    if (endTimeInput) {
+        endTimeInput.addEventListener('change', updatePreview);
+        endTimeInput.addEventListener('input', updatePreview);
+    }
     
     // Add event listeners for working day checkboxes
     workingDayCheckboxes.forEach(cb => {
         cb.addEventListener('change', updatePreview);
     });
     
+    // Clean up any existing interval
+    if (previewUpdateInterval) {
+        clearInterval(previewUpdateInterval);
+    }
+    
     // Update preview every second
-    setInterval(updatePreview, 1000);
+    previewUpdateInterval = setInterval(updatePreview, 1000);
     
     // Initial preview update
     updatePreview();
 }
+
+// Cleanup function
+function cleanup() {
+    if (previewUpdateInterval) {
+        clearInterval(previewUpdateInterval);
+        previewUpdateInterval = null;
+    }
+}
+
+// Clean up when page unloads
+window.addEventListener('beforeunload', cleanup);
 
 // Start when DOM is loaded
 document.addEventListener('DOMContentLoaded', init);
